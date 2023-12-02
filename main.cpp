@@ -17,6 +17,10 @@ int main()
                                        {0}, {0}, {0},
                                        {0}, {0}, {0}};
 
+    std::complex<double> matrixL[9] = {{0}, {0}, {0},
+                                       {0}, {0}, {0},
+                                       {0}, {0}, {0}};
+
     for (int i = 0; i < N*N; i+=4) {
         if (i == 0 || i == 4 || i == 8) {
             matrixH[i] = (matrixH[1] * E0 + matrixH[1] * matrixH[1] * U / N);
@@ -29,6 +33,11 @@ int main()
     matrixH[3] = {2,4};
     matrixH[7] = {3, -1};
 
+    matrixL[4] = {1, 0};
+    matrixL[8] = {2, 0};
+
+
+
 
 
     trace /= N;
@@ -36,8 +45,8 @@ int main()
 // ну типа генерим матрицы базиса
 
     std::complex<double> fBasis1[9] = {{}, {1, 0}, {},
-                                   {1, 0}, {}, {},
-                                   {},{}, {}};
+                                       {1, 0}, {}, {},
+                                       {},{}, {}};
     std::complex<double> fBasis2[9] = {{}, {}, {1, 0},
                                        {}, {}, {},
                                        {1, 0},{}, {}};
@@ -87,7 +96,30 @@ int main()
         }
     }
 
+    std::complex<double> l[9] = {};
+    for (int i = 1; i < 9; ++i) {
+        if (i == 1 || i == 2 || i == 3 || i == 5) {
+            l[i] = {0, 0};
+        } else if (i == 4) {
+            for (int j = 0; j < N*N; ++j) {
+                l[i] += matrixL[j]*fBasis4[j];
+            }
+        } else if (i == 6) {
+            for (int j = 0; j < N*N; ++j) {
+                l[i] += matrixL[j]*fBasis6[j];
+            }
+        } else if (i == 7   ) {
+            for (int j = 0; j < N*N; ++j) {
+                l[i] += matrixL[j]*fBasis7[j];
+            }
+        } else if (i == 8) {
+            for (int j = 0; j < N * N; ++j) {
+                l[i] += matrixL[j] * fBasis8[j];
+            }
+        }
+    }
+
 // ну типа считаем Fmns и Zmns
 
-
+    std::complex<double> Fmns = {0};
 }
