@@ -4,10 +4,13 @@
 #include <algorithm>
 #include <iostream>
 
+<<<<<<< HEAD
 //matrix mul
 
 //check
 
+=======
+>>>>>>> 4495cea560a32078e2e4011add6f682ec1f69447
 std::vector<std::complex<double>> matrixMul(int size, std::complex<double> matrixA[], std::complex<double> matrixB[]) {
     std::vector<std::complex<double>> matrixC;
     for (int row = 0; row < size; ++row) {
@@ -37,6 +40,10 @@ int main()
     double U = 2.2;
     double E0 = 0.5;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4495cea560a32078e2e4011add6f682ec1f69447
 // ну типа задаем матрицы
     std::complex<double> matrixH[9] = {{0}, {0}, {0},
                                        {0}, {0}, {0},
@@ -304,4 +311,8 @@ int main()
 
     int qweqweqwe = 1;
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 4495cea560a32078e2e4011add6f682ec1f69447
