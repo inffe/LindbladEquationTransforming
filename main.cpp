@@ -41,14 +41,14 @@ int main()
 
     // matrix init
     std::complex<double> matrixH[9] = { {0}, {0}, {0},
-                                        {0}, {0}, {0},
-                                        {0}, {0}, {0} };
+                                       {0}, {0}, {0},
+                                       {0}, {0}, {0} };
 
     std::complex<double> matrixL[9] = { {0}, {0}, {0},
-                                        {0}, {0}, {0},
-                                        {0}, {0}, {0} };
+                                       {0}, {0}, {0},
+                                       {0}, {0}, {0} };
 
-    //hamiltonian
+    //hamiltonian (hermitian)
 
     matrixH[0] = { 1, 0 };
     matrixH[1] = { 2, 4 };
@@ -59,51 +59,52 @@ int main()
     matrixH[8] = { 3, 0 };
 
     //lindbladian
-
-    matrixL[1] = { 4, 1 };
-    matrixL[3] = { 4, -1 };
+    
+    matrixL[0] = { 1, 0 };
+    matrixL[1] = { -4, -1 };
+    matrixL[3] = { 4, 1 };
     matrixL[4] = { 2, 0 };
-    matrixL[5] = { 2, 3 };
-    matrixL[7] = { 2, -3 };
+    matrixL[5] = { -2, -3 };
+    matrixL[7] = { 2, 3 };
     matrixL[8] = { 4, 0 };
 
     // init basis matrix
 
     std::complex<double> fBasis[81] = { {1,0}, {1,0}, {1,0},
-                                        {1,0}, {1,0}, {1,0},
-                                        {1,0},{1,0}, {1,0},
+                                       {1,0}, {1,0}, {1,0},
+                                       {1,0},{1,0}, {1,0},
 
-                                        {}, {1, 0}, {},
-                                        {1, 0}, {}, {},
-                                        {},{}, {},
+                                       {}, {1, 0}, {},
+                                       {1, 0}, {}, {},
+                                       {},{}, {},
 
-                                        {}, {}, {1, 0},
-                                        {}, {}, {},
-                                        {1, 0},{}, {},
+                                       {}, {}, {1, 0},
+                                       {}, {}, {},
+                                       {1, 0},{}, {},
 
-                                        {}, {}, {},
-                                        {}, {}, {1, 0},
-                                        {},{1, 0}, {},
+                                       {}, {}, {},
+                                       {}, {}, {1, 0},
+                                       {},{1, 0}, {},
 
-                                        {}, {0, -1}, {},
-                                        {0, 1}, {}, {},
-                                        {},{}, {},
+                                       {}, {0, -1}, {},
+                                       {0, 1}, {}, {},
+                                       {},{}, {},
 
-                                        {}, {}, {0, -1},
-                                        {}, {}, {},
-                                        {0, 1},{}, {},
+                                       {}, {}, {0, -1},
+                                       {}, {}, {},
+                                       {0, 1},{}, {},
 
-                                        {}, {}, {},
-                                        {}, {}, {0, -1},
-                                        {},{0, 1}, {},
+                                       {}, {}, {},
+                                       {}, {}, {0, -1},
+                                       {},{0, 1}, {},
 
-                                        {1, 0}, {}, {},
-                                        {}, {-1, 0}, {},
-                                        {},{}, {},
+                                       {1, 0}, {}, {},
+                                       {}, {-1, 0}, {},
+                                       {},{}, {},
 
-                                        {1, 0}, {}, {},
-                                        {}, {1, 0}, {},
-                                        {},{}, {-2, 0} };
+                                       {1, 0}, {}, {},
+                                       {}, {1, 0}, {},
+                                       {},{}, {-2, 0} };
 
     // h and l vectors
 
@@ -116,13 +117,12 @@ int main()
             else
             {
                 h[i] += matrixH[j] * (OSS * fBasis[i * size * size + j]);
-            }
+            }   
         }
     }
 
-    // check and fix
     std::complex<double> l[size*size] = {};
-    std::complex<double> lConj[size*size] = {};
+    std::complex<double> lConj[size*size] = {}; 
 
     for (int i = 1; i < size*size; ++i) {
         for (int j = 0; j < size * size; ++j) {
@@ -149,7 +149,7 @@ int main()
     std::complex<double> Zmns[size * size][size * size][size * size] = { 0 };
     std::complex<double> filler = { 0 , 1 };
 
-    // filling Fnms
+    // Fmns
     for (int i = 1; i < size*size; ++i) {
         for (int j = 1; j < size*size; ++j) {
             for (int k = 1; k < size*size; ++k) {
@@ -163,10 +163,10 @@ int main()
                 std::complex<double> commutator[size * size];
                 std::complex<double> result[size * size];
 
-                for (int l = 0; l < size*size; ++l) { // filling basis matrix
+                for (int l = 0; l < size*size; ++l) { // filling basis matrix (need to fix OST and OSS coeffs)
                     Fm[l] = fBasis[i * 9 + l];
-                    Fn[k] = fBasis[k * 9 + l];
-                    Fs[j] = fBasis[j * 9 + l];
+                    Fn[l] = fBasis[k * 9 + l];
+                    Fs[l] = fBasis[j * 9 + l];
                 }
 
                 matrixMul(3, Fm, Fn, ab); // AB
@@ -187,7 +187,7 @@ int main()
         }
     }
 
-    //filling Zmns
+    // Zmns
     for (int i = 1; i < size * size; ++i) {
         for (int j = 1; j < size * size; ++j) {
             for (int k = 1; k < size * size; ++k) {
@@ -203,8 +203,8 @@ int main()
 
                 for (int l = 0; l < size * size; ++l) { // filling basis matrix
                     Fm[l] = fBasis[i * 9 + l];
-                    Fn[k] = fBasis[k * 9 + l];
-                    Fs[j] = fBasis[j * 9 + l];
+                    Fn[l] = fBasis[k * 9 + l];
+                    Fs[l] = fBasis[j * 9 + l];
                 }
 
                 matrixMul(3, Fm, Fn, ab); // AB
@@ -261,7 +261,7 @@ int main()
     }
     for (int i = 1; i < 9; ++i) {
         for (int m = 1; m < 9; ++m) {
-            matrixK[i] += fillerMatrixK[i][m];
+            matrixK[i] += fillerMatrixK[i][m]; 
         }
     }
 
@@ -291,17 +291,11 @@ int main()
     std::complex<double> matrixR[9][9] = {};
     for (int i = 1; i < 9; ++i) {
         for (int j = 1; j < 9; ++j) {
-            std::complex<double> qqq = {};
+            std::complex<double> filler = {};
             for (int u = 1; u < 9; ++u) {
-                qqq += fillerMatrixEone[i][u] + fillerMatrixEtwo[j][u];
+                filler += fillerMatrixEone[i][u] + fillerMatrixEtwo[j][u]; // + or * ??
             }
-            matrixR[i][j] = qqq;
-        }
-    }
-
-    for (int i = 1; i < 9; ++i) {
-        for (int j = 1; j < 9; ++j) {
-            std::cout << matrixR[i][j].real() << " " << i << " " << j << std::endl;
+            matrixR[i][j] = filler;
         }
     }
 }
