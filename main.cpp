@@ -48,24 +48,24 @@ int main()
                                        {0}, {0}, {0},
                                        {0}, {0}, {0} };
 
-    //hamiltonian (hermitian)
+    //hamiltonian 
 
     matrixH[0] = { 1, 0 };
-    matrixH[1] = { 2, 4 };
-    matrixH[3] = { 2, 4 };
+    matrixH[1] = { -3, 0 };
+    matrixH[3] = { -3, 0 };
     matrixH[4] = { 2, 0 };
-    matrixH[5] = { 3, 1 };
-    matrixH[7] = { 3, 1 };
+    matrixH[5] = { 5, 0 };
+    matrixH[7] = { 5, 0 };
     matrixH[8] = { 3, 0 };
 
     //lindbladian
     
     matrixL[0] = { 1, 0 };
-    matrixL[1] = { -4, -1 };
-    matrixL[3] = { 4, 1 };
+    matrixL[1] = { 4, 0 };
+    matrixL[3] = { -4, 0 };
     matrixL[4] = { 2, 0 };
-    matrixL[5] = { -2, -3 };
-    matrixL[7] = { 2, 3 };
+    matrixL[5] = { -2, 0 };
+    matrixL[7] = { 2, 0 };
     matrixL[8] = { 4, 0 };
 
     // init basis matrix
@@ -164,9 +164,17 @@ int main()
                 std::complex<double> result[size * size];
 
                 for (int l = 0; l < size*size; ++l) { // filling basis matrix (need to fix OST and OSS coeffs)
-                    Fm[l] = fBasis[i * 9 + l];
-                    Fn[l] = fBasis[k * 9 + l];
-                    Fs[l] = fBasis[j * 9 + l];
+                    if (l != 8) {
+                        Fm[l] = OST * fBasis[i * 9 + l];
+                        Fn[l] = OST * fBasis[k * 9 + l];
+                        Fs[l] = OST * fBasis[j * 9 + l];
+                    }
+                    else {
+                        Fm[l] = OSS * fBasis[i * 9 + l];
+                        Fn[l] = OSS * fBasis[k * 9 + l];
+                        Fs[l] = OSS * fBasis[j * 9 + l];
+                    }
+                    
                 }
 
                 matrixMul(3, Fm, Fn, ab); // AB
@@ -180,7 +188,7 @@ int main()
 
                 Fmns[i][j][k] = -filler * trace(result, size); // -iTr(Fs[Fm, Fn])
 
-                if (arg(Fmns[i][j][k]) != 0 || imag(Fmns[i][j][k]) != 0) { //must be 54
+                if (real(Fmns[i][j][k]) != 0 || imag(Fmns[i][j][k]) != 0) { 
                     ++countFmns;
                 }
             }
@@ -189,7 +197,7 @@ int main()
 
     // Zmns
     for (int i = 1; i < size * size; ++i) {
-        for (int j = 1; j < size * size; ++j) {
+        for (int j = 1; j < size * size; ++j) { 
             for (int k = 1; k < size * size; ++k) {
                 std::complex<double> ab[size * size];
                 std::complex<double> ba[size * size];
@@ -202,9 +210,16 @@ int main()
                 std::complex<double> result[size * size];
 
                 for (int l = 0; l < size * size; ++l) { // filling basis matrix
-                    Fm[l] = fBasis[i * 9 + l];
-                    Fn[l] = fBasis[k * 9 + l];
-                    Fs[l] = fBasis[j * 9 + l];
+                    if (l != 8) {
+                        Fm[l] = OST * fBasis[i * 9 + l];
+                        Fn[l] = OST * fBasis[k * 9 + l];
+                        Fs[l] = OST * fBasis[j * 9 + l];
+                    }
+                    else {
+                        Fm[l] = OSS * fBasis[i * 9 + l];
+                        Fn[l] = OSS * fBasis[k * 9 + l];
+                        Fs[l] = OSS * fBasis[j * 9 + l];
+                    }
                 }
 
                 matrixMul(3, Fm, Fn, ab); // AB
@@ -218,7 +233,7 @@ int main()
 
                 Zmns[i][j][k] = Fmns[i][j][k] + filler * trace(result, size); // +iTr(Fs{Fm, Fn})
 
-                if (arg(Fmns[i][j][k]) != 0 || imag(Fmns[i][j][k]) != 0) { //must be more than 100
+                if (real(Zmns[i][j][k]) != 0 || imag(Zmns[i][j][k]) != 0) { 
                     ++countZmns;
                 }
             }
@@ -226,40 +241,35 @@ int main()
     }
 
     // part C
-    std::complex<double> matrixQ[9][9] = {};
+    std::complex<double> matrixQ[9][9] = { 0 }; // checked
     for (int i = 1; i < 9; ++i) {
-        if (arg(h[i]) != 0 || imag(h[i]) != 0) {
+        if (real(h[i]) != 0 || imag(h[i]) != 0) {
             for (int m = 1; m < 9; ++m) {
                 for (int n = 1; n < 9; ++n) {
-                    matrixQ[m][n] += h[i] * Fmns[i][m][n]; //check indexes
+                    matrixQ[n][m] += h[i] * Fmns[i][m][n]; 
                 }
             }
         }
     }
 
     // part D
-    std::complex<double> matrixK[9] = {};
-    std::complex<double> fillerMatrixK[9][9] = {};
+    std::complex<double> matrixK[9] = { 0 };
+    std::complex<double> fillerMatrixK[9][9] = { 0 };
     for (int i = 1; i < 9; ++i) {
-        if (arg(l[i]) != 0 || imag(l[i]) != 0) {
+        if (real(l[i]) != 0 || imag(l[i]) != 0) {
             for (int m = 1; m < 9; ++m) {
                 for (int n = 1; n < 9; ++n) {
-                    fillerMatrixK[m][n] += l[i] * Fmns[i][m][n]; //check indexes
+                    fillerMatrixK[m][n] += l[i] * Fmns[i][m][n]; 
                 }
             }
         }
     }
     for (int i = 1; i < 9; ++i) {
         for (int m = 1; m < 9; ++m) {
-            if (arg(l[m]) != 0 || imag(l[m]) != 0) {
-                fillerMatrixK[i][m] = lConj[m] * fillerMatrixK[m][i];
-            }
-            else {
-                fillerMatrixK[i][m] = { 0 };
-            }
+            fillerMatrixK[i][m] = lConj[m] * fillerMatrixK[i][m]; // need to proof the type 
         }
     }
-    for (int i = 1; i < 9; ++i) {
+    for (int i = 1; i < 9; ++i) { // merge with previous loop
         for (int m = 1; m < 9; ++m) {
             matrixK[i] += fillerMatrixK[i][m]; 
         }
@@ -268,10 +278,10 @@ int main()
     //part E
     std::complex<double> fillerMatrixEone[9][9] = { 0 };
     for (int i = 1; i < 9; ++i) {
-        if (arg(l[i]) != 0 || imag(l[i]) != 0) {
+        if (real(l[i]) != 0 || imag(l[i]) != 0) {
             for (int m = 1; m < 9; ++m) {
                 for (int n = 1; n < 9; ++n) {
-                    fillerMatrixEone[m][n] += l[i] * Zmns[i][m][n]; //check indexes
+                    fillerMatrixEone[m][n] += l[i] * Zmns[i][m][n];
                 }
             }
         }
@@ -279,10 +289,10 @@ int main()
 
     std::complex<double> fillerMatrixEtwo[9][9] = { 0 };
     for (int i = 1; i < 9; ++i) {
-        if (arg(l[i]) != 0 || imag(l[i]) != 0) {
+        if (real(l[i]) != 0 || imag(l[i]) != 0) {
             for (int m = 1; m < 9; ++m) {
                 for (int n = 1; n < 9; ++n) {
-                    fillerMatrixEtwo[m][n] += lConj[i] * Fmns[i][m][n]; //check indexes
+                    fillerMatrixEtwo[m][n] += lConj[i] * Fmns[i][m][n]; 
                 }
             }
         }
@@ -293,9 +303,15 @@ int main()
         for (int j = 1; j < 9; ++j) {
             std::complex<double> filler = {};
             for (int u = 1; u < 9; ++u) {
-                filler += fillerMatrixEone[i][u] + fillerMatrixEtwo[j][u]; // + or * ??
+                filler += fillerMatrixEone[i][u] + fillerMatrixEtwo[j][u]; 
             }
             matrixR[i][j] = filler;
         }
     }
+
+    // rk4 for initial system
+
+
+    // rk4 for result system
+
 }
