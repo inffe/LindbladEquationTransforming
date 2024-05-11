@@ -11,11 +11,10 @@
 #define ODT (1/3.0)
 #define M_PI 3.14159265358979323846
 
-
-template <typename T> T maMul(int size, T matrixA[], T matrixB[], T resultMatrix[]) {
+void matrixMul(int size, double matrixA[], double matrixB[], double resultMatrix[]) {
     for (int row = 0; row < size; ++row) {
         for (int col = 0; col < size; ++col) {
-            std::complex<double> filler = 0;
+            double filler = 0;
             for (int k = 0; k < size; ++k) {
                 filler += matrixA[row * size + k] * matrixB[k * size + col];
             }
@@ -24,8 +23,7 @@ template <typename T> T maMul(int size, T matrixA[], T matrixB[], T resultMatrix
     }
 }
 
-
-void matrixMul(int size, std::complex<double> matrixA[], std::complex<double> matrixB[], std::complex<double> resultMatrix[]) {
+void cmplmatrixMul(int size, std::complex<double> matrixA[], std::complex<double> matrixB[], std::complex<double> resultMatrix[]) {
     for (int row = 0; row < size; ++row) {
         for (int col = 0; col < size; ++col) {
             std::complex<double> filler = 0;
@@ -54,7 +52,28 @@ void matrixAdd(int size, double matrixOne[][9], double matrixTwo[][9], double re
 }
 
 void matrixTripleMul(int size, double matrixOne[], double matrixTwo[], double matrixThree[], double resultMatrix[]) {
-    //M4 = M1 x M2 x M3
+
+    double tmpArray[9] = { 0 };
+
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            double tmp = 0;
+            for (int k = 0; k < size; ++k) {
+                tmp += matrixOne[i * size + k] * matrixTwo[k * size + j];
+            }
+            tmpArray[i * size + j] = tmp;
+        }
+    }
+
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            double tmp = 0;
+            for (int k = 0; k < size; ++k) {
+                tmp += tmpArray[i * size + k] * matrixThree[k * size + j];
+            }
+            resultMatrix[i * size + j] = tmp;
+        }
+    }
 }
 
 std::vector<double> vectorAdd(int size, std::vector<double> vectorV, double vectorK[]) {
@@ -98,39 +117,85 @@ std::vector<double> func(const int size, double t, double matrixQOne[][9], doubl
     return vvv;
 }
 
-double funcInit(const int size, double t, double hamiltonian[], double lindbladian[], double lindbladianT[], double ro[]) {
-
-    //anti-commutator [H(t), ro] + dissipatiec part of linbladian
+double *funcInit(const int size, double t, double hamiltonian[], double hamiltonian2[],  double lindbladian[], double lindbladianT[], double ro[]) {
 
     double tmp1[9] = { 0 };
     double tmp2[9] = { 0 };
     double tmp3[9] = { 0 };
 
-    double antcomtmp[9] = { 0 };
+    double comtmp[9] = { 0 };
+    double comtmp2[9] = { 0 };
 
-    //anti-commutator 
+    if (t < M_PI) {
 
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
-            
+        //anti-commutator [H(t), ro] + dissipation part of linbladian
+
+        //commutator AB - BA
+
+        matrixMul(size, hamiltonian, ro, comtmp);
+        matrixMul(size, ro, hamiltonian, comtmp2);
+
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) {
+                comtmp[i * size + j] -= comtmp2[i * size + j];
+            }
+        }
+
+        // dissipation part 
+
+        matrixTripleMul(size, lindbladian, ro, lindbladianT, tmp1); // LpL+
+        matrixTripleMul(size, lindbladianT, lindbladian, ro,  tmp2); // L+Lp
+        matrixTripleMul(size, ro, lindbladianT, lindbladian, tmp3); // pL+L
+
+        // 
+
+        for (int i = 0; i < size; ++i) { 
+            for (int j = 0; j < size; ++j) {
+                tmp1[i * size + j] -= 0.5 * (tmp2[i * size + j] + tmp3[i * size + j]);
+                tmp1[i * size + j] = tmp1[i * size + j] * 0.05;
+            }
+        }
+    
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) {
+                tmp1[i * size + j] += comtmp[i * size + j];
+            }
         }
     }
+    else {
 
-    // dissipation part 
+        matrixMul(size, hamiltonian2, ro, comtmp);
+        matrixMul(size, ro, hamiltonian2, comtmp2);
 
-    matrixTripleMul(size, lindbladian, ro, lindbladianT, tmp1); // LpL+
-    matrixTripleMul(size, lindbladianT, lindbladian, ro,  tmp2); // L+Lp
-    matrixTripleMul(size, ro, lindbladianT, lindbladian, tmp3); // pL+L
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) {
+                comtmp[i * size + j] -= comtmp2[i * size + j];
+            }
+        }
 
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
-            tmp1[i * size + j] -= 0.5 * (tmp2[i * size + j] + tmp3[i * size + j]);
-            tmp1[i * size + j] = tmp1[i * size + j] * 0.05;
+        // dissipation part 
+
+        matrixTripleMul(size, lindbladian, ro, lindbladianT, tmp1); // LpL+
+        matrixTripleMul(size, lindbladianT, lindbladian, ro, tmp2); // L+Lp
+        matrixTripleMul(size, ro, lindbladianT, lindbladian, tmp3); // pL+L
+
+        // 
+
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) {
+                tmp1[i * size + j] -= 0.5 * (tmp2[i * size + j] + tmp3[i * size + j]);
+                tmp1[i * size + j] = tmp1[i * size + j] * 0.05;
+            }
+        }
+
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) {
+                tmp1[i * size + j] += comtmp[i * size + j];
+            }
         }
     }
     
-
-    return 0;
+    return tmp1;
 }
 
 std::vector<double> rk4(int size, double t, double matrixQOne[][9], double matrixQTwo[][9], double matrixR[][9], std::vector<double> vectorV, double matrixK[]) {
@@ -170,6 +235,46 @@ std::vector<double> rk4(int size, double t, double matrixQOne[][9], double matri
     }
 
     return result;
+}
+
+double* rk4init(const int size, double t, double hamiltonian1[], double hamiltonian2[], double lindbladian[], double lindbladianT[], double ro[]) {
+
+    double result[9];
+
+    double *k1;
+    double *k2;
+    double* k3;
+    double* k4;
+    double kShift[9] = { 0 };
+
+    double h = 0.05;
+
+    k1 = funcInit(size, t, hamiltonian1, hamiltonian2, lindbladian, lindbladianT, ro);
+
+    for (int i = 0; i < size * size - 1; ++i) {
+        kShift[i] = ro[i] + (h / 2) * k1[i];
+    }
+
+    k2 = funcInit(size, t + h / 2, hamiltonian1, hamiltonian2, lindbladian, lindbladianT, kShift);
+
+    for (int i = 0; i < size * size - 1; ++i) {
+        kShift[i] = ro[i] + (h / 2) * k2[i];
+    }
+
+    k3 = funcInit(size, t + h / 2, hamiltonian1, hamiltonian2, lindbladian, lindbladianT, kShift);
+
+    for (int i = 0; i < size * size - 1; ++i) {
+        kShift[i] = ro[i] + h * k3[i];
+    }
+
+    k4 = funcInit(size, t + h, hamiltonian1, hamiltonian2, lindbladian, lindbladianT, kShift);
+
+    for (int i = 0; i < size * size - 1; ++i) {
+        result[i] = ro[i] + h / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]);
+    }
+
+    return result;
+
 }
 
 int main()
@@ -356,14 +461,14 @@ int main()
 
                 }
 
-                matrixMul(3, Fm, Fn, ab); // AB
-                matrixMul(3, Fn, Fm, ba); // BA
+                cmplmatrixMul(3, Fm, Fn, ab); // AB
+                cmplmatrixMul(3, Fn, Fm, ba); // BA
 
                 for (int z = 0; z < size * size; ++z) { // AB - BA or [Fm, Fn]
                     commutator[z] = ab[z] - ba[z];
                 }
 
-                matrixMul(3, Fs, commutator, result); // Fs[Fm, Fn]
+                cmplmatrixMul(3, Fs, commutator, result); // Fs[Fm, Fn]
 
                 Fmns[i][j][k] = -filler * trace(result, size); // -iTr(Fs[Fm, Fn])
 
@@ -401,14 +506,14 @@ int main()
                     }
                 }
 
-                matrixMul(3, Fm, Fn, ab); // AB
-                matrixMul(3, Fn, Fm, ba); // BA
+                cmplmatrixMul(3, Fm, Fn, ab); // AB
+                cmplmatrixMul(3, Fn, Fm, ba); // BA
 
                 for (int z = 0; z < size * size; ++z) { // AB + BA or {Fm, Fn}
                     antiCommutator[z] = ab[z] + ba[z];
                 }
 
-                matrixMul(3, Fs, antiCommutator, result); // Fs{Fm, Fn}
+                cmplmatrixMul(3, Fs, antiCommutator, result); // Fs{Fm, Fn}
 
                 Zmns[i][j][k] = Fmns[i][j][k] + filler * trace(result, size); // +iTr(Fs{Fm, Fn})
 
@@ -505,7 +610,18 @@ int main()
 
     // rk4 for initial system
 
+    double ro[size * size] = { 0 };
 
+    for (double t = 0; t < 2 * M_PI; t += 0.05) {
+
+        double* inittmp;
+        
+        inittmp = rk4init(size, t, hamiltonian1, hamiltonian2, linbladian, lindbladianT, ro);
+
+        for (int i = 0; i < size * size; ++i) {
+            ro[i] = inittmp[i];
+        }
+    }
     
 
     // rk4 for result system
@@ -513,7 +629,7 @@ int main()
     std::vector<double> vectorV(8);
 
 
-    for (double t = 0; t < 2 * M_PI; t += 0.05) {
+    for (double t = 0; t < 2 * M_PI; t += 0.05) {   
         std::vector<double> tmpp(8);
 
         tmpp = rk4(size, t, matrixQ, matrixQ2, matrixR, vectorV, matrixK);
